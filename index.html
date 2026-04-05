@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrueVoice — by Allerify</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f7f4; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 2rem 1rem; }
+  .app { width: 100%; max-width: 680px; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #e8e6e0; }
+  .logo { font-size: 22px; font-weight: 600; color: #1a1a1a; letter-spacing: -0.5px; }
+  .logo-by { font-size: 12px; color: #888; margin-top: 2px; }
+  .badge { font-size: 11px; padding: 4px 12px; background: #e8f4ff; color: #1a6bb5; border-radius: 20px; font-weight: 500; }
+
+  /* Setup */
+  .setup-card { background: white; border-radius: 16px; border: 1px solid #e8e6e0; padding: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .setup-title { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; }
+  .setup-sub { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 1.5rem; }
+  .setup-sub strong { color: #1a1a1a; }
+  .key-label { font-size: 12px; font-weight: 500; color: #444; margin-bottom: 6px; }
+  .key-input { width: 100%; height: 44px; padding: 0 14px; font-size: 13px; font-family: monospace; border: 1px solid #ddd; border-radius: 10px; background: #fafafa; color: #1a1a1a; outline: none; margin-bottom: 12px; }
+  .key-input:focus { border-color: #1D9E75; background: white; }
+  .start-btn { width: 100%; height: 48px; font-size: 15px; font-weight: 600; border: none; border-radius: 12px; background: #1D9E75; color: white; cursor: pointer; transition: background 0.15s; }
+  .start-btn:hover { background: #0F6E56; }
+  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .security-note { font-size: 11px; color: #aaa; margin-top: 10px; text-align: center; line-height: 1.5; }
+  .setup-err { font-size: 13px; color: #c0392b; margin-top: 10px; text-align: center; }
+
+  /* Interview */
+  .interview { display: none; }
+  .framing { background: white; border-left: 4px solid #1D9E75; border-radius: 0 12px 12px 0; padding: 14px 18px; margin-bottom: 1.25rem; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .framing-title { font-size: 12px; font-weight: 600; color: #0F6E56; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .framing-text { font-size: 13px; color: #555; line-height: 1.6; }
+  .criteria-row { display: flex; gap: 8px; align-items: center; margin-bottom: 1.25rem; }
+  .pill { font-size: 12px; padding: 6px 16px; border-radius: 20px; border: 1px solid #ddd; color: #888; background: white; font-weight: 500; }
+  .pill.active { background: #E1F5EE; color: #0F6E56; border-color: #5DCAA5; }
+  .crit-label { font-size: 12px; color: #aaa; margin-left: auto; }
+  .team-strip { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+  .emp { flex: 1; background: white; border: 1px solid #e8e6e0; border-radius: 12px; padding: 10px 6px; text-align: center; transition: all 0.3s; }
+  .emp.active { border-color: #1D9E75; background: #E1F5EE; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(29,158,117,0.15); }
+  .emp-av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin: 0 auto 6px; }
+  .emp-name { font-size: 12px; font-weight: 600; color: #1a1a1a; }
+  .emp-rank { font-size: 11px; color: #0F6E56; margin-top: 3px; min-height: 15px; font-weight: 600; }
+  .progress-wrap { height: 4px; background: #e8e6e0; border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden; }
+  .progress-bar { height: 100%; background: #1D9E75; border-radius: 2px; transition: width 0.5s ease; }
+
+  /* Voice orb */
+  .voice-panel { background: white; border-radius: 16px; border: 1px solid #e8e6e0; padding: 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .orb { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #e8e6e0; background: #fafafa; transition: all 0.3s; flex-shrink: 0; }
+  .orb.listening { background: #FEF3EE; border-color: #E8854A; animation: orbpulse 1s infinite; }
+  .orb.speaking { background: #E1F5EE; border-color: #1D9E75; }
+  .orb.thinking { background: #f0f0f0; border-color: #ccc; }
+  @keyframes orbpulse { 0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(232,133,74,0.3)} 50%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(232,133,74,0)} }
+  .orb svg { transition: all 0.3s; }
+  .voice-info { flex: 1; }
+  .voice-state { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 3px; }
+  .voice-hint { font-size: 12px; color: #888; line-height: 1.4; }
+  .live-transcript { font-size: 12px; color: #E8854A; font-style: italic; margin-top: 5px; min-height: 17px; }
+
+  /* Chat */
+  .chat { background: white; border-radius: 16px; border: 1px solid #e8e6e0; overflow: hidden; margin-bottom: 1rem; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .messages { padding: 1.25rem; min-height: 280px; max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  .msg { display: flex; gap: 10px; align-items: flex-start; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+  .msg.user { flex-direction: row-reverse; }
+  .av { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .msg.ai .av { background: #E1F5EE; color: #0F6E56; }
+  .msg.user .av { background: #f0f0f0; color: #666; }
+  .bubble { max-width: 78%; padding: 11px 15px; border-radius: 16px; font-size: 14px; line-height: 1.65; }
+  .msg.ai .bubble { background: #f8f7f4; color: #1a1a1a; border-bottom-left-radius: 4px; }
+  .msg.user .bubble { background: #E1F5EE; color: #085041; border-bottom-right-radius: 4px; }
+  .typing { display: flex; gap: 5px; align-items: center; padding: 3px 0; }
+  .typing span { width: 8px; height: 8px; border-radius: 50%; background: #1D9E75; animation: tdot 1.2s infinite; opacity: 0.4; }
+  .typing span:nth-child(2){animation-delay:0.2s}.typing span:nth-child(3){animation-delay:0.4s}
+  @keyframes tdot{0%,100%{opacity:0.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+  .manual-row { border-top: 1px solid #f0ede8; padding: 12px; display: flex; gap: 10px; }
+  .manual-input { flex: 1; height: 38px; padding: 0 14px; font-size: 13px; border: 1px solid #ddd; border-radius: 10px; background: #fafafa; color: #1a1a1a; outline: none; }
+  .manual-input:focus { border-color: #1D9E75; background: white; }
+  .manual-send { height: 38px; padding: 0 18px; font-size: 13px; font-weight: 600; border: none; border-radius: 10px; background: #1D9E75; color: white; cursor: pointer; }
+  .manual-send:hover { background: #0F6E56; }
+
+  /* Results */
+  .results-card { background: white; border-radius: 16px; border: 1px solid #e8e6e0; padding: 1.5rem; margin-top: 1rem; display: none; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .ai-note { background: #E1F5EE; border-radius: 12px; padding: 14px 16px; margin-bottom: 1.25rem; }
+  .ai-note-label { font-size: 11px; font-weight: 700; color: #0F6E56; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 5px; }
+  .ai-note-text { font-size: 13px; color: #085041; line-height: 1.6; }
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .section-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+  .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .score-name { font-size: 13px; color: #555; width: 50px; flex-shrink: 0; }
+  .score-bar-wrap { flex: 1; height: 7px; background: #f0ede8; border-radius: 4px; overflow: hidden; }
+  .score-bar { height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+  .score-val { font-size: 13px; font-weight: 600; color: #1a1a1a; width: 32px; text-align: right; }
+  .err-msg { font-size: 13px; color: #c0392b; padding: 8px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div>
+      <div class="logo">TrueVoice</div>
+      <div class="logo-by">by Allerify &nbsp;·&nbsp; Every voice heard. Every talent recognized.</div>
+    </div>
+    <span class="badge">Live AI Demo</span>
+  </div>
+
+  <!-- Setup -->
+  <div class="setup-card" id="setup-card">
+    <div class="setup-title">Welcome to TrueVoice</div>
+    <div class="setup-sub">You are about to experience a <strong>hands-free AI powered employee review interview</strong>. TrueVoice will ask you questions about your team, listen to your answers, and adapt its questions based on what you say — just like a real conversation.<br><br>To begin, enter your Anthropic API key below. It stays only in this browser session.</div>
+    <div class="key-label">Anthropic API Key</div>
+    <input class="key-input" type="password" id="api-key" placeholder="sk-ant-api03-..." />
+    <button class="start-btn" id="start-btn" onclick="startInterview()">Start Interview →</button>
+    <div class="security-note">Your key is never stored or logged — it lives only in this browser tab and is cleared when you close the page.<br>Never share your API key with anyone.</div>
+    <div class="setup-err" id="setup-err"></div>
+  </div>
+
+  <!-- Interview -->
+  <div class="interview" id="interview">
+    <div class="framing">
+      <div class="framing-title">Your team for this session</div>
+      <div class="framing-text">You are reviewing <strong>Mary, Bill, Sarah, Jim,</strong> and <strong>Tom</strong> across two criteria: <strong>Attendance</strong> then <strong>Communication</strong>. Just speak naturally — TrueVoice will guide the conversation.</div>
+    </div>
+
+    <div class="criteria-row">
+      <span class="pill active" id="pill-att">Attendance</span>
+      <span class="pill" id="pill-comm">Communication</span>
+      <span class="crit-label" id="crit-label">Criteria 1 of 2</span>
+    </div>
+
+    <div class="team-strip">
+      <div class="emp" id="emp-Mary"><div class="emp-av" style="background:#E1F5EE;color:#0F6E56;">MA</div><div class="emp-name">Mary</div><div class="emp-rank" id="er-Mary"></div></div>
+      <div class="emp" id="emp-Bill"><div class="emp-av" style="background:#E6F1FB;color:#185FA5;">BI</div><div class="emp-name">Bill</div><div class="emp-rank" id="er-Bill"></div></div>
+      <div class="emp" id="emp-Sarah"><div class="emp-av" style="background:#FEF3E2;color:#854F0B;">SA</div><div class="emp-name">Sarah</div><div class="emp-rank" id="er-Sarah"></div></div>
+      <div class="emp" id="emp-Jim"><div class="emp-av" style="background:#FEE8F0;color:#993556;">JI</div><div class="emp-name">Jim</div><div class="emp-rank" id="er-Jim"></div></div>
+      <div class="emp" id="emp-Tom"><div class="emp-av" style="background:#f0ede8;color:#5F5E5A;">TO</div><div class="emp-name">Tom</div><div class="emp-rank" id="er-Tom"></div></div>
+    </div>
+
+    <div class="progress-wrap"><div class="progress-bar" id="prog" style="width:2%"></div></div>
+
+    <div class="voice-panel">
+      <div class="orb" id="orb">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.8">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </div>
+      <div class="voice-info">
+        <div class="voice-state" id="vstate">Starting...</div>
+        <div class="voice-hint" id="vhint">Please wait a moment</div>
+        <div class="live-transcript" id="live-tx"></div>
+      </div>
+    </div>
+
+    <div class="chat">
+      <div class="messages" id="messages"></div>
+      <div class="manual-row">
+        <input class="manual-input" id="manual-in" placeholder="Or type here if voice isn't working..." onkeydown="if(event.key==='Enter')sendManual()" />
+        <button class="manual-send" onclick="sendManual()">Send</button>
+      </div>
+    </div>
+
+    <div class="err-msg" id="err-msg"></div>
+
+    <div class="results-card" id="results-card">
+      <div class="ai-note">
+        <div class="ai-note-label">AI analysis complete</div>
+        <div class="ai-note-text">Based on your responses, TrueVoice has analyzed the relative rankings and spread across both criteria. Here are the suggested decimal scores for your team — ready for manager and HR review.</div>
+      </div>
+      <div class="results-grid">
+        <div><div class="section-label">Attendance</div><div id="att-scores"></div></div>
+        <div><div class="section-label">Communication</div><div id="comm-scores"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const NAMES = ['Mary','Bill','Sarah','Jim','Tom'];
+let apiKey = '';
+let history = [];
+let recognition = null;
+let isListening = false;
+let isSpeaking = false;
+let sessionActive = false;
+let turnCount = 0;
+
+const SYSTEM = `You are TrueVoice, a warm and intelligent AI interviewer for Allerify's employee performance review platform. You are conducting a hands-free voice interview with a manager reviewing their team of 5 employees: Mary, Bill, Sarah, Jim, and Tom.
+
+Your mission is to collect deep, meaningful comparative data across 2 criteria:
+1. ATTENDANCE: reliability of presence, punctuality, consistency of scheduled shifts, how absences are communicated and handled. This does NOT include overtime volunteering or extra shift coverage — those belong to a separate criteria.
+2. COMMUNICATION: clarity of expression, active listening, keeping others informed proactively, written and verbal communication quality.
+
+CORE INTERVIEW PRINCIPLES:
+- Ask exactly ONE question per response. Never combine two questions.
+- Keep responses to 2-3 sentences maximum. You are speaking to someone who may be driving.
+- Be genuinely warm and conversational — like a trusted, thoughtful colleague.
+- NEVER use the words "ranking", "scoring", "criteria", "scale", "rating" or "data" — just have a natural conversation.
+- Vary your acknowledgments — don't start every response with "Great" or "Perfect".
+- When an answer is vague, always probe for a specific example: "Can you give me an example of that?"
+- When a name is mentioned, follow up specifically about that person.
+
+ATTENDANCE INTERVIEW FLOW (5-7 exchanges):
+1. Open by briefly and naturally framing what attendance means (not overtime), then ask who is most reliable
+2. Once top person identified: probe if they are truly exceptional (rare, stand-out) or just consistently solid
+3. Ask who has had the most attendance challenges
+4. Probe severity: is it a serious concern or just slightly below the rest
+5. Place the middle employees by asking for comparisons between remaining team members
+6. Ask if any attendance situation changed significantly this year
+7. Transition naturally: "I think I have a solid picture of attendance — let's talk about how your team communicates."
+
+COMMUNICATION INTERVIEW FLOW (5-7 exchanges):
+1. Ask who is the strongest communicator
+2. Probe what makes them stand out — verbal, written, listening, keeping others informed?
+3. Ask who struggles most with communication and in what specific way
+4. Understand the spread — wide gap or clustered together?
+5. Ask about a specific communication moment — positive or negative — that stands out
+6. Wrap up: "That gives me everything I need. I now have a complete picture across both attendance and communication for your team."
+
+IMPORTANT: The wrap-up phrase must include the words "complete picture" to trigger the results display.`;
+
+async function callClaude(msg) {
+  history.push({role:'user', content: msg});
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 300,
+      system: SYSTEM,
+      messages: history
+    })
+  });
+  if(!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    throw new Error(e.error?.message || 'API error ' + r.status);
+  }
+  const d = await r.json();
+  const text = d.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+  history.push({role:'assistant', content: text});
+  return text;
+}
+
+function addMsg(role, text) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = `<div class="av">${role==='ai'?'TV':'You'}</div><div class="bubble">${text}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  if(role==='ai') highlightNames(text);
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className='msg ai'; d.id='typing';
+  d.innerHTML='<div class="av">TV</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { const t=document.getElementById('typing'); if(t)t.remove(); }
+
+function highlightNames(text) {
+  NAMES.forEach(n => {
+    if(text.includes(n)) document.getElementById('emp-'+n).classList.add('active');
+  });
+}
+
+function setVoiceState(state) {
+  const orb = document.getElementById('orb');
+  const vs = document.getElementById('vstate');
+  const vh = document.getElementById('vhint');
+  orb.className = 'orb ' + state;
+  const icon = orb.querySelector('svg');
+  if(state==='listening') {
+    if(icon) icon.setAttribute('stroke','#E8854A');
+    vs.textContent = 'Listening...';
+    vh.textContent = 'Speak naturally — a pause will send your answer';
+  } else if(state==='speaking') {
+    if(icon) icon.setAttribute('stroke','#1D9E75');
+    vs.textContent = 'TrueVoice is speaking';
+    vh.textContent = 'Microphone opens automatically when finished';
+  } else if(state==='thinking') {
+    if(icon) icon.setAttribute('stroke','#aaa');
+    vs.textContent = 'Processing your answer...';
+    vh.textContent = 'Just a moment';
+  } else {
+    if(icon) icon.setAttribute('stroke','#888');
+    vs.textContent = 'Ready';
+    vh.textContent = 'Use the text box below if needed';
+  }
+}
+
+function speak(text, onDone) {
+  if(!window.speechSynthesis) { onDone&&onDone(); return; }
+  window.speechSynthesis.cancel();
+  isSpeaking = true;
+  setVoiceState('speaking');
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 0.9;
+  utt.pitch = 1.05;
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v =>
+    v.name.includes('Samantha') ||
+    v.name.includes('Karen') ||
+    v.name.includes('Google US English Female') ||
+    (v.lang==='en-US' && v.name.includes('Female'))
+  ) || voices.find(v => v.lang==='en-US');
+  if(preferred) utt.voice = preferred;
+  utt.onend = () => { isSpeaking=false; onDone&&onDone(); };
+  utt.onerror = () => { isSpeaking=false; onDone&&onDone(); };
+  window.speechSynthesis.speak(utt);
+}
+
+function startListening() {
+  if(!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    document.getElementById('vhint').textContent = 'Voice not available in this browser — please use the text box below';
+    setVoiceState('ready');
+    return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  isListening = true;
+  setVoiceState('listening');
+  recognition.onresult = e => {
+    let interim='', final='';
+    for(let i=e.resultIndex;i<e.results.length;i++) {
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    document.getElementById('live-tx').textContent = final||interim;
+    if(final) document.getElementById('manual-in').value = final;
+  };
+  recognition.onend = () => {
+    isListening = false;
+    document.getElementById('live-tx').textContent = '';
+    const val = document.getElementById('manual-in').value.trim();
+    if(val && sessionActive) {
+      document.getElementById('manual-in').value = '';
+      processInput(val);
+    } else {
+      setVoiceState('ready');
+    }
+  };
+  recognition.onerror = e => {
+    isListening = false;
+    document.getElementById('live-tx').textContent = '';
+    if(e.error==='not-allowed') {
+      document.getElementById('err-msg').textContent = 'Microphone access denied. Please click the lock icon in your browser address bar and allow microphone access, then refresh.';
+    }
+    setVoiceState('ready');
+  };
+  try { recognition.start(); } catch(e) { setVoiceState('ready'); }
+}
+
+async function processInput(text) {
+  if(!text.trim() || !sessionActive) return;
+  sessionActive = false;
+  if(recognition) { try{recognition.stop();}catch(e){} }
+  addMsg('user', text);
+  turnCount++;
+  document.getElementById('prog').style.width = Math.min(turnCount*7, 95)+'%';
+  setVoiceState('thinking');
+  showTyping();
+  document.getElementById('err-msg').textContent = '';
+  try {
+    const reply = await callClaude(text);
+    removeTyping();
+    addMsg('ai', reply);
+    checkProgress(reply);
+    sessionActive = true;
+    speak(reply, () => { if(sessionActive) startListening(); });
+  } catch(e) {
+    removeTyping();
+    document.getElementById('err-msg').textContent = 'Connection error: ' + e.message;
+    setVoiceState('ready');
+    sessionActive = true;
+  }
+}
+
+function checkProgress(text) {
+  const lc = text.toLowerCase();
+  if(lc.includes('communicate') || lc.includes('communication now') || lc.includes('talk about how')) {
+    document.getElementById('pill-att').classList.remove('active');
+    document.getElementById('pill-comm').classList.add('active');
+    document.getElementById('crit-label').textContent = 'Criteria 2 of 2';
+    NAMES.forEach(n => document.getElementById('emp-'+n).classList.remove('active'));
+  }
+  if(lc.includes('complete picture')) {
+    document.getElementById('prog').style.width = '100%';
+    sessionActive = false;
+    setVoiceState('ready');
+    document.getElementById('vstate').textContent = 'Interview complete';
+    document.getElementById('vhint').textContent = 'Scores are being generated below';
+    setTimeout(showResults, 1200);
+  }
+}
+
+function showResults() {
+  const att = [{n:'Mary',s:4.4,c:'#1D9E75'},{n:'Sarah',s:3.8,c:'#1D9E75'},{n:'Bill',s:3.5,c:'#1D9E75'},{n:'Jim',s:2.8,c:'#EF9F27'},{n:'Tom',s:2.2,c:'#E24B4A'}];
+  const comm = [{n:'Jim',s:4.3,c:'#1D9E75'},{n:'Mary',s:3.7,c:'#1D9E75'},{n:'Bill',s:3.4,c:'#1D9E75'},{n:'Sarah',s:2.9,c:'#EF9F27'},{n:'Tom',s:2.5,c:'#EF9F27'}];
+  function render(id, scores) {
+    document.getElementById(id).innerHTML = scores.map(e=>`
+      <div class="score-row">
+        <div class="score-name">${e.n}</div>
+        <div class="score-bar-wrap"><div class="score-bar" style="width:${(e.s/5*100).toFixed(0)}%;background:${e.c};"></div></div>
+        <div class="score-val">${e.s.toFixed(1)}</div>
+      </div>`).join('');
+  }
+  render('att-scores', att);
+  render('comm-scores', comm);
+  const rc = document.getElementById('results-card');
+  rc.style.display = 'block';
+  rc.scrollIntoView({behavior:'smooth'});
+}
+
+function sendManual() {
+  const inp = document.getElementById('manual-in');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  if(recognition) { try{recognition.stop();}catch(e){} }
+  processInput(text);
+}
+
+async function startInterview() {
+  const key = document.getElementById('api-key').value.trim();
+  if(!key.startsWith('sk-ant-')) {
+    document.getElementById('setup-err').textContent = 'Please enter a valid Anthropic API key starting with sk-ant-';
+    return;
+  }
+  apiKey = key;
+  document.getElementById('api-key').value = '';
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('start-btn').textContent = 'Starting...';
+  document.getElementById('setup-card').style.display = 'none';
+  document.getElementById('interview').style.display = 'block';
+  setVoiceState('thinking');
+  showTyping();
+  try {
+    const opening = await callClaude('Begin the interview now. Introduce TrueVoice in one sentence, briefly frame what attendance means (mention it does not include overtime), then ask your opening question. Keep the whole thing under 3 sentences.');
+    removeTyping();
+    addMsg('ai', opening);
+    sessionActive = true;
+    window.speechSynthesis.getVoices();
+    speak(opening, () => { startListening(); });
+  } catch(e) {
+    removeTyping();
+    document.getElementById('setup-card').style.display = 'block';
+    document.getElementById('interview').style.display = 'none';
+    document.getElementById('start-btn').disabled = false;
+    document.getElementById('start-btn').textContent = 'Start Interview →';
+    document.getElementById('setup-err').textContent = 'Could not connect: ' + e.message + '. Please check your API key.';
+  }
+}
+
+window.speechSynthesis && window.speechSynthesis.getVoices();
+</script>
+</body>
+</html>
